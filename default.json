@@ -1,0 +1,48 @@
+{
+  "sim_setup": {
+    "params": {
+      "m": 200.0,
+      "I": 200.0,
+      "L": 0.5,
+      "g": 9.81,
+      "T_max": 2500.0,
+      "T_min": 1000.0,
+      "isp": 200,
+      "delta_max_deg": 12,
+      "tilt_limit_deg": 10
+    },
+    "controller_name": "Cascaded PD",
+    "gains": {
+      "kp_x": 0.16,
+      "kd_x": 0.8,
+      "kp_z": 0.16,
+      "kd_z": 0.8,
+      "kp_theta": 16.0,
+      "kd_theta": 6.4
+    },
+    "phases": [
+      {"x_target": 20.0, "z_target": 0.0, "t_end": 30.0}
+    ],
+    "initial_state": {
+      "x": 0.0,
+      "z": 100.0,
+      "xdot": 0.0,
+      "zdot": 0.0,
+      "theta": 0.0,
+      "thetadot": 0.0
+    },
+    "landing_tolerance": 1.0
+  },
+  "solver_setup": {
+    "max_step": 0.05,
+    "method": "RK45"
+  },
+  "outputs": {
+    "trajectory": 1,
+    "state": 1,
+    "animation": 0,
+    "report": 1,
+    "csv": 1,
+    "engine": 1
+  }
+}
