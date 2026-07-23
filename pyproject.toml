@@ -1,7 +1,13 @@
 [project]
 name = "lander-trajectory-tool"
 version = "0.1.0"
-description = "Add your description here"
+description = "Lander trajectory simulation GUI designed for the SUSF Starworks lander"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "nicegui[native]>=3.14.0",
+    "vtvl-sim @ git+https://github.com/dfps16/vtvl-sim.git@v0.1.0",
+]
+
+[tool.uv]
+  package = false
