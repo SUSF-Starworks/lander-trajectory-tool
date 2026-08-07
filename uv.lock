@@ -637,7 +637,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "nicegui", extras = ["native"], specifier = ">=3.14.0" },
-    { name = "vtvl-sim", git = "https://github.com/dfps16/vtvl-sim.git?rev=v0.1.0" },
+    { name = "vtvl-sim", git = "https://github.com/dfps16/vtvl-sim.git?rev=v0.2.0" },
 ]
 
 [[package]]
@@ -1675,11 +1675,10 @@ wheels = [
 [[package]]
 name = "vtvl-sim"
 version = "0.1.0"
-source = { git = "https://github.com/dfps16/vtvl-sim.git?rev=v0.1.0#af7db511936b26bc205b82c4d5ed94adecdb105c" }
+source = { git = "https://github.com/dfps16/vtvl-sim.git?rev=v0.2.0#100e322e920929c1090542a1daca101c5666c90b" }
 dependencies = [
     { name = "control" },
     { name = "matplotlib" },
-    { name = "nicegui", extra = ["native"] },
     { name = "numpy" },
     { name = "pydantic" },
     { name = "scipy" },
