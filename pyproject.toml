@@ -8,7 +8,9 @@ license = "MIT"
 dependencies = [
     "nicegui[native]>=3.14.0",
     "pydantic>=2.13.4",
-    "vtvl-sim @ git+https://github.com/dfps16/vtvl-sim.git@v0.3.0",
+    # A plain HTTPS tarball, not git+https — installing this tool must not require
+    # a system git executable (uv shells out to git for git: dependencies).
+    "vtvl-sim @ https://github.com/dfps16/vtvl-sim/archive/refs/tags/v0.3.0.tar.gz",
 ]
 
 [project.scripts]
