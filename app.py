@@ -4,6 +4,7 @@ import os
 import time
 
 from nicegui import app, run, ui
+from pydantic import ValidationError
 
 from vtvl_sim import(
     CONTROLLER_REGISTRY,
@@ -12,6 +13,9 @@ from vtvl_sim import(
     compute_trajectory_metrics,
     build_setup, sim_run,
 ) # Custom vtvl sim library that can be found on my github
+# plot_propellant isn't re-exported from the vtvl_sim package root (only from the
+# plotting submodule), unlike its plot_* siblings above.
+from vtvl_sim.plotting import plot_propellant
 from paths import APP_DIR, ASSETS_DIR, RESULTS_DIR, result_path
 
 # Creating the directory that will carry results
@@ -72,7 +76,7 @@ ATTITUDE_DEMO = 'Attitude PD (inner-loop demo)'
 # (key, label) for the widgets that let the user override the physics params and
 # initial state. Keys match the scenario JSON so loading/saving is a direct copy.
 PARAM_FIELDS = [
-    ('m', 'm — mass [kg]'),
+    ('m_dry', 'm_dry — dry mass [kg]'),
     ('I', 'I — inertia [kg·m²]'),
     ('L', 'L — moment arm [m]'),
     ('g', 'g [m/s²]'),
@@ -85,6 +89,7 @@ PARAM_FIELDS = [
 INITIAL_STATE_FIELDS = [
     ('x', 'x [m]'), ('z', 'z [m]'), ('xdot', 'ẋ [m/s]'),
     ('zdot', 'ż [m/s]'), ('theta', 'θ [rad]'), ('thetadot', 'θ̇ [rad/s]'),
+    ('m', 'm — wet mass [kg]'),
 ]
 SOLVER_METHODS = ['RK45', 'RK23', 'DOP853', 'Radau', 'BDF', 'LSODA']
 
@@ -165,6 +170,7 @@ def show_placeholders():
         (state_panel, 'State plot will appear here'),
         (traj_panel, 'Trajectory plot will appear here'),
         (engine_panel, 'Engine plot will appear here'),
+        (propellant_panel, 'Propellant plot will appear here'),
         (anim_panel, 'Animation will appear here (if enabled)'),
     ):
         panel.clear()
@@ -221,6 +227,11 @@ def _show_trajectory_metrics(metrics):
             _metric_tile('Lateral touchdown error', f"{metrics['touchdown_error']:.2f} m")
             _metric_tile('Touchdown speed', f"{metrics['vel_touchdown']:.2f} m/s")
             _metric_tile('Touchdown angle', f"{metrics['angle_touchdown_deg']:.1f}°")
+        elif metrics['flameout']:
+            _metric_tile('Status', 'Flameout')
+            _metric_tile('Apogee', f"{metrics['apogee']:.1f} m")
+            _metric_tile('Final altitude error', f"{metrics['altitude_error']:.2f} m")
+            _metric_tile('Final x error', f"{metrics['touchdown_error']:.2f} m")
         else:
             _metric_tile('Status', 'No touchdown')
             _metric_tile('Apogee', f"{metrics['apogee']:.1f} m")
@@ -230,12 +241,23 @@ def _show_trajectory_metrics(metrics):
         _metric_tile('Propellant mass', f"{metrics['propellant_mass']:.2f} kg")
         _metric_tile('Propellant — ascent', f"{metrics['propellant_ascent']:.2f} kg")
         _metric_tile('Propellant — descent', f"{metrics['propellant_descent']:.2f} kg")
+        _metric_tile('Propellant remaining', f"{metrics['propellant_remaining']:.2f} kg")
 
 def _show_engine_metrics(metrics):
     with ui.row().classes('w-full justify-center gap-6'):
         _metric_tile('Max throttle', f"{metrics['throttle_max']:.1f} %")
         _metric_tile('Min throttle', f"{metrics['throttle_min']:.1f} %")
         _metric_tile('Average throttle', f"{metrics['throttle_avg']:.1f} %")
+
+def _show_propellant_metrics(metrics):
+    with ui.row().classes('w-full justify-center gap-6'):
+        status = 'Landed' if metrics['landed'] else ('Flameout' if metrics['flameout'] else 'No touchdown')
+        _metric_tile('Status', status)
+        _metric_tile('Propellant remaining', f"{metrics['propellant_remaining']:.2f} kg")
+        _metric_tile('Propellant used (actual)', f"{metrics['propellant_actual']:.2f} kg")
+        _metric_tile('Propellant used (post-hoc)', f"{metrics['propellant_mass']:.2f} kg")
+        _metric_tile('Propellant — ascent', f"{metrics['propellant_ascent']:.2f} kg")
+        _metric_tile('Propellant — descent', f"{metrics['propellant_descent']:.2f} kg")
 
 def apply_scenario(raw):
     """Populate every input widget from a parsed scenario dict. Accepts either a
@@ -350,6 +372,7 @@ def on_download():
             'report': 1,
             'csv': 1,
             'engine': 1,
+            'propellant': 1,
         },
     }
     name = (scenario_name_input.value or '').strip() or 'scenario'
@@ -382,6 +405,9 @@ async def on_run_click():
         engine_fig = plot_engine(sim_results, sim_setup)
         engine_fig.savefig(result_path('last_gui_engine.png'), dpi=300)
 
+        propellant_fig = plot_propellant(sim_results, sim_setup)
+        propellant_fig.savefig(result_path('last_gui_propellant.png'), dpi=300)
+
         state_metrics = compute_state_metrics(sim_results)
         traj_metrics = compute_trajectory_metrics(sim_setup, sim_results)
         engine_metrics = compute_engine_metrics(sim_setup, sim_results)
@@ -391,6 +417,7 @@ async def on_run_click():
             (state_panel, 'last_gui_state.png', 'w-[60em]', _show_state_metrics, state_metrics),
             (traj_panel, 'last_gui_trajectory.png', 'w-96', _show_trajectory_metrics, traj_metrics),
             (engine_panel, 'last_gui_engine.png', 'w-[60em]', _show_engine_metrics, engine_metrics),
+            (propellant_panel, 'last_gui_propellant.png', 'w-[60em]', _show_propellant_metrics, traj_metrics),
         ):
             panel.clear()
             with panel:
@@ -433,6 +460,7 @@ with ui.column().classes('w-full items-center'):
         tab_state = ui.tab('State', icon='show_chart')
         tab_traj = ui.tab('Trajectory', icon='timeline')
         tab_engine = ui.tab('Engine', icon='local_fire_department')
+        tab_propellant = ui.tab('Propellant', icon='local_gas_station')
         tab_anim = ui.tab('Animation', icon='movie')
     with ui.tab_panels(result_tabs, value=tab_state).classes('w-full'):
         with ui.tab_panel(tab_state):
@@ -441,6 +469,8 @@ with ui.column().classes('w-full items-center'):
             traj_panel = ui.column().classes('w-full items-center')
         with ui.tab_panel(tab_engine):
             engine_panel = ui.column().classes('w-full items-center')
+        with ui.tab_panel(tab_propellant):
+            propellant_panel = ui.column().classes('w-full items-center')
         with ui.tab_panel(tab_anim):
             anim_panel = ui.column().classes('w-full items-center')
 

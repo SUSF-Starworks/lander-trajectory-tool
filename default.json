@@ -1,7 +1,7 @@
 {
   "sim_setup": {
     "params": {
-      "m": 200.0,
+      "m_dry": 200.0,
       "I": 200.0,
       "L": 0.5,
       "g": 9.81,
@@ -29,7 +29,8 @@
       "xdot": 0.0,
       "zdot": 0.0,
       "theta": 0.0,
-      "thetadot": 0.0
+      "thetadot": 0.0,
+      "m": 250.0
     },
     "landing_tolerance": 1.0
   },
