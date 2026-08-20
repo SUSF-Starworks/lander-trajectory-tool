@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import sys
 import time
 
 from nicegui import app, run, ui
@@ -16,7 +17,7 @@ from vtvl_sim import(
 # plot_propellant isn't re-exported from the vtvl_sim package root (only from the
 # plotting submodule), unlike its plot_* siblings above.
 from vtvl_sim.plotting import plot_propellant
-from paths import APP_DIR, ASSETS_DIR, RESULTS_DIR, result_path
+from lander_trajectory_tool.paths import APP_DIR, ASSETS_DIR, RESULTS_DIR, result_path
 
 # Creating the directory that will carry results
 app.add_static_files('/results', RESULTS_DIR)
@@ -555,17 +556,37 @@ with ui.row().classes('items-center'):
 # localhost. Set VTVL_NATIVE=0 to fall back to the browser.
 NATIVE = os.getenv('VTVL_NATIVE', '1') != '0'
 
+# Auto-reload re-execs this file as a script to watch it for changes, which only
+# works when it's actually run that way (`python app.py`) — the installed
+# console-script entry point has no such script to re-exec, and NiceGUI fails at
+# startup if reload is on there. Off by default; opt in with VTVL_RELOAD=1 when
+# iterating on the source directly.
+RELOAD = os.getenv('VTVL_RELOAD', '0') != '0'
+
 if NATIVE:
     # A webview has no browser download UI, so ui.download (Save scenario) is a
     # no-op unless pywebview is told to handle downloads itself.
     app.native.settings['ALLOW_DOWNLOADS'] = True
     app.native.window_args['min_size'] = (1100, 700)
 
-ui.run(
-    title='Lander Trajectory Tool',
-    native=NATIVE,
-    window_size=(1600, 1000) if NATIVE else None,
-    # The webview runs in its own process; auto-reload re-spawns it and can leave
-    # orphaned windows, so it is only enabled for the browser path.
-    reload=not NATIVE,
-)
+def main():
+    # This whole file builds its UI at module level rather than behind a @ui.page
+    # route, so NiceGUI runs it in "script mode": every new browser session gets a
+    # fresh UI by re-executing sys.argv[0] via runpy. That's the real script file
+    # in dev (`python app.py`), but the installed console-script wrapper otherwise
+    # — pointing it at this file keeps script-mode re-execution working either way.
+    sys.argv[0] = __file__
+    ui.run(
+        title='Lander Trajectory Tool',
+        native=NATIVE,
+        window_size=(1600, 1000) if NATIVE else None,
+        reload=RELOAD,
+    )
+
+# NiceGUI's native/reload modes multiprocess-spawn a copy of this module; when run
+# as `python app.py` that reimport lands as __mp_main__ rather than __main__, so
+# both names need to be handled here to avoid a hung subprocess. The installed
+# console-script entry point (`lander-trajectory-tool`) calls main() directly and
+# doesn't rely on this guard at all.
+if __name__ in {'__main__', '__mp_main__'}:
+    main()
