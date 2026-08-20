@@ -27,8 +27,8 @@ Requires [uv](https://docs.astral.sh/uv/) and [git](https://git-scm.com/download
 uv tool install git+https://github.com/SUSF-Starworks/lander-trajectory-tool.git
 lander-trajectory-tool
 ```
-This installs a standalone `lander-trajectory-tool` command. Run it again any time directly from your terminal / powershell
-update with `uv tool upgrade lander-trajectory-tool` whenever a new version is released.
+This installs a standalone `lander-trajectory-tool` command. Run `lander-trajectory-tool` any time from your terminal/PowerShell.
+Update it with `uv tool upgrade lander-trajectory-tool` whenever a new version is released.
 
 ### Extras
 By default the app opens in its own desktop window. Set `VTVL_NATIVE=0` to run it as a
