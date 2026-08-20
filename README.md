@@ -20,8 +20,7 @@ state, engine, and propellant plots.
 
 ## Install
 
-Requires [uv](https://docs.astral.sh/uv/) and [git](https://git-scm.com/downloads) — the
-`vtvl-sim` engine dependency is pulled from its git repo at install time.
+Requires [uv](https://docs.astral.sh/uv/) and [git](https://git-scm.com/downloads)
 
 ### Quick Start
 ```bash
