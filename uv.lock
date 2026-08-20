@@ -639,7 +639,7 @@ dependencies = [
 requires-dist = [
     { name = "nicegui", extras = ["native"], specifier = ">=3.14.0" },
     { name = "pydantic", specifier = ">=2.13.4" },
-    { name = "vtvl-sim", url = "https://github.com/dfps16/vtvl-sim/archive/refs/tags/v0.3.0.tar.gz" },
+    { name = "vtvl-sim", git = "https://github.com/dfps16/vtvl-sim.git?rev=v0.3.0" },
 ]
 
 [[package]]
@@ -1716,7 +1716,7 @@ wheels = [
 [[package]]
 name = "vtvl-sim"
 version = "0.3.0"
-source = { url = "https://github.com/dfps16/vtvl-sim/archive/refs/tags/v0.3.0.tar.gz" }
+source = { git = "https://github.com/dfps16/vtvl-sim.git?rev=v0.3.0#e6033d779b4ef0cbce590da39b3d348672593f9d" }
 dependencies = [
     { name = "control" },
     { name = "matplotlib" },
@@ -1724,17 +1724,6 @@ dependencies = [
     { name = "pydantic" },
     { name = "scipy" },
     { name = "scipy-stubs" },
-]
-sdist = { hash = "sha256:0d70dac74978d3a8e87363988a41ef8a9dc30a21a4b7e2e71398016800be55c6" }
-
-[package.metadata]
-requires-dist = [
-    { name = "control", specifier = "==0.10.2" },
-    { name = "matplotlib", specifier = "==3.11.0" },
-    { name = "numpy", specifier = "==2.5.0" },
-    { name = "pydantic", specifier = "==2.13.4" },
-    { name = "scipy", specifier = "==1.18.0" },
-    { name = "scipy-stubs", specifier = "~=1.18.0" },
 ]
 
 [[package]]
